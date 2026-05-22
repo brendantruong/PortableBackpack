@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "4oZtw1wpX+g=",
+  "success": true,
+  "projectFilePath": "/Users/brendantruong/Desktop/PortableBackpack/PortableBackpack.csproj",
+  "expectedPackageFiles": [
+    "/Users/brendantruong/.nuget/packages/pathoschild.stardew.modbuildconfig/4.4.0/pathoschild.stardew.modbuildconfig.4.4.0.nupkg.sha512",
+    "/Users/brendantruong/.nuget/packages/microsoft.netcore.app.ref/6.0.36/microsoft.netcore.app.ref.6.0.36.nupkg.sha512",
+    "/Users/brendantruong/.nuget/packages/microsoft.aspnetcore.app.ref/6.0.36/microsoft.aspnetcore.app.ref.6.0.36.nupkg.sha512"
+  ],
+  "logs": []
+}

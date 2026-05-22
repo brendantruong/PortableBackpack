@@ -1,0 +1,10 @@
+{
+  "Name": "Portable Backpack",
+  "Author": "Brendan",
+  "Version": "1.0.0",
+  "Description": "Adds a placeable backpack with limited storage and speed penalties.",
+  "UniqueID": "Brendan.PortableBackpack",
+  "EntryDll": "PortableBackpack.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": []
+}

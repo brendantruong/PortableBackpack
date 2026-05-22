@@ -1,0 +1,8 @@
+/Users/brendantruong/Desktop/PortableBackpack/bin/Debug/net6.0/PortableBackpack.deps.json
+/Users/brendantruong/Desktop/PortableBackpack/bin/Debug/net6.0/PortableBackpack.dll
+/Users/brendantruong/Desktop/PortableBackpack/obj/Debug/net6.0/PortableBackpack.csproj.AssemblyReference.cache
+/Users/brendantruong/Desktop/PortableBackpack/obj/Debug/net6.0/PortableBackpack.GeneratedMSBuildEditorConfig.editorconfig
+/Users/brendantruong/Desktop/PortableBackpack/obj/Debug/net6.0/PortableBackpack.AssemblyInfoInputs.cache
+/Users/brendantruong/Desktop/PortableBackpack/obj/Debug/net6.0/PortableBackpack.AssemblyInfo.cs
+/Users/brendantruong/Desktop/PortableBackpack/obj/Debug/net6.0/PortableBackpack.csproj.CoreCompileInputs.cache
+/Users/brendantruong/Desktop/PortableBackpack/obj/Debug/net6.0/PortableBackpack.dll
