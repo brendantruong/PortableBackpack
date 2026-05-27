@@ -6,3 +6,4 @@
 /Users/brendantruong/Desktop/PortableBackpack/obj/Debug/net6.0/PortableBackpack.AssemblyInfo.cs
 /Users/brendantruong/Desktop/PortableBackpack/obj/Debug/net6.0/PortableBackpack.csproj.CoreCompileInputs.cache
 /Users/brendantruong/Desktop/PortableBackpack/obj/Debug/net6.0/PortableBackpack.dll
+/Users/brendantruong/Desktop/PortableBackpack/obj/Debug/net6.0/PortableBackpack.sourcelink.json

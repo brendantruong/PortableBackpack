@@ -9,12 +9,18 @@ namespace PortableBackpack
 {
     internal sealed class ModEntry : Mod
     {
-        private const string BackpackKey = "YourProjectName.Backpack";
+        private const string BackpackTypeKey = "Brendan.PortableBackpack.Type";
+        private const string MiningType = "Mining";
+        private const string CropType = "Crops";
 
-        private ModConfig _config = new ModConfig();
+        private ModConfig _config = new();
 
-        private bool _isCarryingBackpack = true;
-        private Chest? _placedBackpack = null;
+        private Chest? _placedMiningBackpack;
+        private Chest? _placedCropBackpack;
+
+        private bool _carryingMiningBackpack = true;
+        private bool _carryingCropBackpack = true;
+
         private int _appliedSpeedPenalty = 0;
 
         public override void Entry(IModHelper helper)
@@ -30,16 +36,35 @@ namespace PortableBackpack
             if (!Context.IsWorldReady)
                 return;
 
-            if (e.Button != _config.BackpackButton)
-                return;
+            if (e.Button == _config.MiningBackpackButton)
+                HandleBackpackButton(MiningType);
 
-            if (_isCarryingBackpack)
-                PlaceBackpack();
-            else
-                PickUpBackpack();
+            if (e.Button == _config.CropBackpackButton)
+                HandleBackpackButton(CropType);
         }
 
-        private void PlaceBackpack()
+        private void HandleBackpackButton(string type)
+        {
+            if (type == MiningType)
+            {
+                if (_carryingMiningBackpack)
+                    PlaceBackpack(MiningType);
+                else
+                    PickUpBackpack(MiningType);
+
+                return;
+            }
+
+            if (type == CropType)
+            {
+                if (_carryingCropBackpack)
+                    PlaceBackpack(CropType);
+                else
+                    PickUpBackpack(CropType);
+            }
+        }
+
+        private void PlaceBackpack(string type)
         {
             GameLocation location = Game1.currentLocation;
             Vector2 tile = GetTileInFrontOfPlayer();
@@ -51,45 +76,61 @@ namespace PortableBackpack
             }
 
             Chest chest = new Chest(true);
-            chest.modData[BackpackKey] = "true";
+            chest.modData[BackpackTypeKey] = type;
 
             location.objects.Add(tile, chest);
 
-            _placedBackpack = chest;
-            _isCarryingBackpack = false;
-
-            Game1.addHUDMessage(new HUDMessage("Backpack placed.", HUDMessage.newQuest_type));
+            if (type == MiningType)
+            {
+                _placedMiningBackpack = chest;
+                _carryingMiningBackpack = false;
+                Game1.addHUDMessage(new HUDMessage("Mining backpack placed.", HUDMessage.newQuest_type));
+            }
+            else
+            {
+                _placedCropBackpack = chest;
+                _carryingCropBackpack = false;
+                Game1.addHUDMessage(new HUDMessage("Crop backpack placed.", HUDMessage.newQuest_type));
+            }
         }
 
-        private void PickUpBackpack()
+        private void PickUpBackpack(string type)
         {
             GameLocation location = Game1.currentLocation;
             Vector2 tile = GetTileInFrontOfPlayer();
 
             if (!location.objects.TryGetValue(tile, out SObject? obj))
             {
-                Game1.addHUDMessage(new HUDMessage("Face your backpack to pick it up.", HUDMessage.error_type));
+                Game1.addHUDMessage(new HUDMessage($"Face your {type.ToLower()} backpack to pick it up.", HUDMessage.error_type));
                 return;
             }
 
-            if (obj is not Chest chest || !chest.modData.ContainsKey(BackpackKey))
+            if (obj is not Chest chest || !chest.modData.TryGetValue(BackpackTypeKey, out string? foundType) || foundType != type)
             {
-                Game1.addHUDMessage(new HUDMessage("That is not your backpack.", HUDMessage.error_type));
+                Game1.addHUDMessage(new HUDMessage($"That is not your {type.ToLower()} backpack.", HUDMessage.error_type));
                 return;
             }
 
             if (chest.Items.Count > _config.MaxSlots)
             {
-                Game1.addHUDMessage(new HUDMessage("Backpack is too full.", HUDMessage.error_type));
+                Game1.addHUDMessage(new HUDMessage($"The {type.ToLower()} backpack can only hold {_config.MaxSlots} item slots.", HUDMessage.error_type));
                 return;
             }
 
             location.objects.Remove(tile);
 
-            _placedBackpack = null;
-            _isCarryingBackpack = true;
-
-            Game1.addHUDMessage(new HUDMessage("Backpack picked up.", HUDMessage.newQuest_type));
+            if (type == MiningType)
+            {
+                _placedMiningBackpack = null;
+                _carryingMiningBackpack = true;
+                Game1.addHUDMessage(new HUDMessage("Mining backpack picked up.", HUDMessage.newQuest_type));
+            }
+            else
+            {
+                _placedCropBackpack = null;
+                _carryingCropBackpack = true;
+                Game1.addHUDMessage(new HUDMessage("Crop backpack picked up.", HUDMessage.newQuest_type));
+            }
         }
 
         private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
@@ -97,20 +138,76 @@ namespace PortableBackpack
             if (!Context.IsWorldReady)
                 return;
 
-            EnforceBackpackLimit();
+            if (e.IsMultipleOf(30))
+            {
+                EnforceBackpackRules(_placedMiningBackpack, MiningType);
+                EnforceBackpackRules(_placedCropBackpack, CropType);
+            }
+
             UpdateSpeedPenalty();
         }
 
-        private void EnforceBackpackLimit()
+        private void EnforceBackpackRules(Chest? chest, string type)
         {
-            if (_placedBackpack == null)
+            if (chest == null)
                 return;
 
-            while (_placedBackpack.Items.Count > _config.MaxSlots)
+            for (int i = chest.Items.Count - 1; i >= 0; i--)
             {
-                _placedBackpack.Items.RemoveAt(_placedBackpack.Items.Count - 1);
-                Game1.addHUDMessage(new HUDMessage("Backpack can only hold 15 item slots.", HUDMessage.error_type));
+                Item item = chest.Items[i];
+
+                bool allowed = type == MiningType
+                    ? IsMiningItem(item)
+                    : IsCropItem(item);
+
+                if (!allowed)
+                {
+                    chest.Items.RemoveAt(i);
+
+                    if (!Game1.player.addItemToInventoryBool(item))
+                        Game1.createItemDebris(item, Game1.player.Position, Game1.player.FacingDirection, Game1.currentLocation);
+
+                    Game1.addHUDMessage(new HUDMessage($"That item does not belong in the {type.ToLower()} backpack.", HUDMessage.error_type));
+                }
             }
+
+            while (chest.Items.Count > _config.MaxSlots)
+            {
+                Item item = chest.Items[chest.Items.Count - 1];
+                chest.Items.RemoveAt(chest.Items.Count - 1);
+
+                if (!Game1.player.addItemToInventoryBool(item))
+                    Game1.createItemDebris(item, Game1.player.Position, Game1.player.FacingDirection, Game1.currentLocation);
+
+                Game1.addHUDMessage(new HUDMessage($"The {type.ToLower()} backpack can only hold {_config.MaxSlots} item slots.", HUDMessage.error_type));
+            }
+        }
+
+        private bool IsMiningItem(Item item)
+        {
+            if (item is not SObject obj)
+                return false;
+
+            return obj.Category == SObject.mineralsCategory
+                || obj.Category == SObject.GemCategory
+                || obj.Category == SObject.metalResources
+                || obj.Category == SObject.buildingResources
+                || obj.Name.ToLower().Contains("ore")
+                || obj.Name.ToLower().Contains("coal")
+                || obj.Name.ToLower().Contains("bar")
+                || obj.Name.ToLower().Contains("geode");
+        }
+
+        private bool IsCropItem(Item item)
+        {
+            if (item is not SObject obj)
+                return false;
+
+            return obj.Category == SObject.VegetableCategory
+                || obj.Category == SObject.FruitsCategory
+                || obj.Category == SObject.flowersCategory
+                || obj.Category == SObject.SeedsCategory
+                || obj.Category == SObject.GreensCategory;
         }
 
         private void UpdateSpeedPenalty()
@@ -119,17 +216,25 @@ namespace PortableBackpack
 
             int filledSlots = 0;
 
-            if (_placedBackpack != null)
-                filledSlots = _placedBackpack.Items.Count;
+            if (_carryingMiningBackpack && _placedMiningBackpack != null)
+                filledSlots += _placedMiningBackpack.Items.Count;
+
+            if (_carryingCropBackpack && _placedCropBackpack != null)
+                filledSlots += _placedCropBackpack.Items.Count;
 
             int penalty = 0;
 
             if (filledSlots >= 5)
                 penalty = -1;
+
             if (filledSlots >= 10)
                 penalty = -2;
-            if (filledSlots >= 15)
+
+            if (filledSlots >= 20)
                 penalty = -3;
+
+            if (filledSlots >= 30)
+                penalty = -4;
 
             _appliedSpeedPenalty = penalty;
             Game1.player.addedSpeed += _appliedSpeedPenalty;
@@ -157,7 +262,8 @@ namespace PortableBackpack
 
     internal sealed class ModConfig
     {
-        public SButton BackpackButton { get; set; } = SButton.B;
+        public SButton MiningBackpackButton { get; set; } = SButton.M;
+        public SButton CropBackpackButton { get; set; } = SButton.C;
         public int MaxSlots { get; set; } = 15;
     }
 }
