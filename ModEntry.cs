@@ -21,7 +21,10 @@ namespace PortableBackpack
         private bool _carryingMiningBackpack = true;
         private bool _carryingCropBackpack = true;
 
+        private bool _choosingBackpack = false;
+
         private int _appliedSpeedPenalty = 0;
+        private int _lastReportedPenalty = 0;
 
         public override void Entry(IModHelper helper)
         {
@@ -36,11 +39,29 @@ namespace PortableBackpack
             if (!Context.IsWorldReady)
                 return;
 
-            if (e.Button == _config.MiningBackpackButton)
-                HandleBackpackButton(MiningType);
+            if (e.Button == _config.OpenBackpackMenuButton)
+            {
+                _choosingBackpack = true;
+                Game1.addHUDMessage(new HUDMessage("Backpack menu: press M for Mining or C for Crops.", HUDMessage.newQuest_type));
+                return;
+            }
 
-            if (e.Button == _config.CropBackpackButton)
+            if (!_choosingBackpack)
+                return;
+
+            if (e.Button == _config.MiningBackpackChoiceButton)
+            {
+                _choosingBackpack = false;
+                HandleBackpackButton(MiningType);
+                return;
+            }
+
+            if (e.Button == _config.CropBackpackChoiceButton)
+            {
+                _choosingBackpack = false;
                 HandleBackpackButton(CropType);
+                return;
+            }
         }
 
         private void HandleBackpackButton(string type)
@@ -216,10 +237,10 @@ namespace PortableBackpack
 
             int filledSlots = 0;
 
-            if (_carryingMiningBackpack && _placedMiningBackpack != null)
+            if (_placedMiningBackpack != null)
                 filledSlots += _placedMiningBackpack.Items.Count;
 
-            if (_carryingCropBackpack && _placedCropBackpack != null)
+            if (_placedCropBackpack != null)
                 filledSlots += _placedCropBackpack.Items.Count;
 
             int penalty = 0;
@@ -238,6 +259,26 @@ namespace PortableBackpack
 
             _appliedSpeedPenalty = penalty;
             Game1.player.addedSpeed += _appliedSpeedPenalty;
+
+            if (_appliedSpeedPenalty != _lastReportedPenalty)
+            {
+                if (_appliedSpeedPenalty < 0)
+                {
+                    Game1.addHUDMessage(new HUDMessage(
+                        $"Your backpacks are getting heavy. Speed penalty: {_appliedSpeedPenalty}.",
+                        HUDMessage.error_type
+                    ));
+                }
+                else
+                {
+                    Game1.addHUDMessage(new HUDMessage(
+                        "Your backpack load feels lighter. Speed restored.",
+                        HUDMessage.newQuest_type
+                    ));
+                }
+
+                _lastReportedPenalty = _appliedSpeedPenalty;
+            }
         }
 
         private Vector2 GetTileInFrontOfPlayer()
@@ -262,8 +303,9 @@ namespace PortableBackpack
 
     internal sealed class ModConfig
     {
-        public SButton MiningBackpackButton { get; set; } = SButton.M;
-        public SButton CropBackpackButton { get; set; } = SButton.C;
+        public SButton OpenBackpackMenuButton { get; set; } = SButton.B;
+        public SButton MiningBackpackChoiceButton { get; set; } = SButton.M;
+        public SButton CropBackpackChoiceButton { get; set; } = SButton.C;
         public int MaxSlots { get; set; } = 15;
     }
 }

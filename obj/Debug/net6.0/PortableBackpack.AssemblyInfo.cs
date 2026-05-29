@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PortableBackpack")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2c1f17163a0ada57ec6656b831edb1870ae8f78b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4f6da4d6a4d24d98a0e3b91154c063d0421a95f8")]
 [assembly: System.Reflection.AssemblyProductAttribute("PortableBackpack")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PortableBackpack")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
