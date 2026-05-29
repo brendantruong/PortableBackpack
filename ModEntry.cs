@@ -21,8 +21,6 @@ namespace PortableBackpack
         private bool _carryingMiningBackpack = true;
         private bool _carryingCropBackpack = true;
 
-        private bool _choosingBackpack = false;
-
         private int _appliedSpeedPenalty = 0;
         private int _lastReportedPenalty = 0;
 
@@ -39,26 +37,14 @@ namespace PortableBackpack
             if (!Context.IsWorldReady)
                 return;
 
-            if (e.Button == _config.OpenBackpackMenuButton)
+            if (e.Button == _config.MiningBackpackButton)
             {
-                _choosingBackpack = true;
-                Game1.addHUDMessage(new HUDMessage("Backpack menu: press M for Mining or C for Crops.", HUDMessage.newQuest_type));
-                return;
-            }
-
-            if (!_choosingBackpack)
-                return;
-
-            if (e.Button == _config.MiningBackpackChoiceButton)
-            {
-                _choosingBackpack = false;
                 HandleBackpackButton(MiningType);
                 return;
             }
 
-            if (e.Button == _config.CropBackpackChoiceButton)
+            if (e.Button == _config.CropBackpackButton)
             {
-                _choosingBackpack = false;
                 HandleBackpackButton(CropType);
                 return;
             }
@@ -152,6 +138,8 @@ namespace PortableBackpack
                 _carryingCropBackpack = true;
                 Game1.addHUDMessage(new HUDMessage("Crop backpack picked up.", HUDMessage.newQuest_type));
             }
+
+            UpdateSpeedPenalty();
         }
 
         private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
@@ -303,9 +291,8 @@ namespace PortableBackpack
 
     internal sealed class ModConfig
     {
-        public SButton OpenBackpackMenuButton { get; set; } = SButton.B;
-        public SButton MiningBackpackChoiceButton { get; set; } = SButton.M;
-        public SButton CropBackpackChoiceButton { get; set; } = SButton.C;
+        public SButton MiningBackpackButton { get; set; } = SButton.F5;
+        public SButton CropBackpackButton { get; set; } = SButton.F6;
         public int MaxSlots { get; set; } = 15;
     }
 }
